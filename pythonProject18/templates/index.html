@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chatbot</title>
+</head>
+<body>
+    <h1>Chatbot</h1>
+    <div id="chatbox">
+        <!-- Chat messages will be displayed here -->
+    </div>
+    <div id="user-input">
+        <input type="text" id="user-message" placeholder="Type your message here..." autofocus/>
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    <div id="voice-toggle">
+        <input type="checkbox" id="toggle-voice" onchange="toggleVoice()"/>
+        <label for="toggle-voice">Toggle Voice</label>
+        <span id="voice-status">Voice Disabled</span>
+    </div>
+    <script>
+        function sendMessage() {
+            var message = document.getElementById("user-message").value;
+            if (message.trim() !== '') {
+                appendMessage("user", message);
+                document.getElementById("user-message").value = "";
+                fetch("/send", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ message: message }),
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        appendMessage("bot", data.reply);
+                        if (isVoiceEnabled()) {
+                            speak(data.reply);
+                        }
+                    });
+            }
+        }
+
+        function appendMessage(sender, message) {
+            var chatbox = document.getElementById("chatbox");
+            var newMessage = document.createElement("p");
+            newMessage.classList.add(sender);
+            newMessage.innerHTML = message;
+            chatbox.appendChild(newMessage);
+        }
+
+        function toggleVoice() {
+            var voiceStatus = document.getElementById("voice-status");
+
+            if (isVoiceEnabled()) {
+                voiceStatus.innerHTML = "Voice Enabled";
+            } else {
+                voiceStatus.innerHTML = "Voice Disabled";
+            }
+        }
+
+        function isVoiceEnabled() {
+            var voiceToggle = document.getElementById("toggle-voice");
+            return voiceToggle.checked;
+        }
+
+        function speak(message) {
+            var speech = new SpeechSynthesisUtterance();
+            speech.text = message;
+            speech.volume = 1;
+            speech.rate = 1;
+            speech.pitch = 1;
+            window.speechSynthesis.speak(speech);
+        }
+    </script>
+</body>
+</html>
